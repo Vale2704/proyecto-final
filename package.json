@@ -1,0 +1,9 @@
+{
+  "name": "biblioteca-buenaventura-raiz",
+  "private": true,
+  "description": "Atajo para levantar todo con Docker",
+  "scripts": {
+    "docker": "docker compose up --build",
+    "docker:detached": "docker compose up --build -d"
+  }
+}
