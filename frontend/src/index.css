@@ -1,10 +1,10 @@
 :root {
-  --fondo: #f6f1e9;
-  --tarjeta: #fffdf8;
-  --borde: #d4c4a8;
-  --texto: #2c2416;
-  --acento: #8b6914;
-  --acento-claro: #c9a227;
+  --fondo: #f4f6f8;
+  --tarjeta: #ffffff;
+  --borde: #d8dee7;
+  --texto: #243042;
+  --acento: #3f6ea7;
+  --acento-claro: #6f98c8;
   --ok: #2d6a4f;
   --error: #9b2226;
   --sombra: rgba(44, 36, 22, 0.08);
@@ -45,8 +45,8 @@ textarea {
 }
 
 .topbar {
-  background: linear-gradient(135deg, #5c4a2a, #8b6914);
-  color: #fff8e7;
+  background: linear-gradient(135deg, #2f4f75, #3f6ea7);
+  color: #f5f9ff;
   padding: 0.85rem 1.25rem;
   display: flex;
   align-items: center;
@@ -71,7 +71,7 @@ textarea {
 }
 
 .topbar nav a {
-  color: #fff8e7;
+  color: #f5f9ff;
   text-decoration: none;
   padding: 0.35rem 0.65rem;
   border-radius: 6px;
@@ -80,8 +80,8 @@ textarea {
 
 .topbar nav a:hover,
 .topbar nav a.activo {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .topbar .user {
