@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash
 
 from config import Config
 from extensions import db, jwt
-import models  # noqa: F401 — registra tablas
+import models  
 from api import bp as api_bp
 from models import UsuarioSistema
 

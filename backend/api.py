@@ -28,7 +28,7 @@ def _rol():
     uid = get_jwt_identity()
     if not uid:
         return None
-    u = UsuarioSistema.query.get(int(uid))
+    u = db.session.get(UsuarioSistema, int(uid))
     return u.rol if u else None
 
 
@@ -161,7 +161,7 @@ def login():
 @jwt_required()
 def me():
     uid = int(get_jwt_identity())
-    u = UsuarioSistema.query.get(uid)
+    u = db.session.get(UsuarioSistema, uid)
     if not u:
         return jsonify({"ok": False, "mensaje": "Usuario no existe"}), 404
     return jsonify({"ok": True, "usuario": u.usuario, "rol": u.rol})
@@ -200,7 +200,7 @@ def actualizar_libro(libro_id):
     err = requiere_gestor_o_admin()
     if err:
         return err
-    libro = Libro.query.get(libro_id)
+    libro = db.session.get(Libro, libro_id)
     if not libro:
         return jsonify({"ok": False, "mensaje": "Libro no encontrado"}), 404
     d = request.get_json(silent=True) or {}
@@ -223,7 +223,7 @@ def borrar_libro(libro_id):
     err = requiere_gestor_o_admin()
     if err:
         return err
-    libro = Libro.query.get(libro_id)
+    libro = db.session.get(Libro, libro_id)
     if not libro:
         return jsonify({"ok": False, "mensaje": "Libro no encontrado"}), 404
     activos = Prestamo.query.filter_by(libro_id=libro_id, estado="activo").count()
@@ -266,7 +266,7 @@ def actualizar_cliente(cliente_id):
     err = requiere_gestor_o_admin()
     if err:
         return err
-    c = Cliente.query.get(cliente_id)
+    c = db.session.get(Cliente, cliente_id)
     if not c:
         return jsonify({"ok": False, "mensaje": "Cliente no encontrado"}), 404
     d = request.get_json(silent=True) or {}
@@ -288,7 +288,7 @@ def borrar_cliente(cliente_id):
     err = requiere_gestor_o_admin()
     if err:
         return err
-    c = Cliente.query.get(cliente_id)
+    c = db.session.get(Cliente, cliente_id)
     if not c:
         return jsonify({"ok": False, "mensaje": "Cliente no encontrado"}), 404
     activos = Prestamo.query.filter_by(cliente_id=cliente_id, estado="activo").count()
@@ -344,8 +344,8 @@ def crear_prestamo():
         libro_id = int(libro_id)
     except (TypeError, ValueError):
         return jsonify({"ok": False, "mensaje": "IDs inválidos"}), 400
-    cliente = Cliente.query.get(cliente_id)
-    libro = Libro.query.get(libro_id)
+    cliente = db.session.get(Cliente, cliente_id)
+    libro = db.session.get(Libro, libro_id)
     if not cliente or not libro:
         return jsonify({"ok": False, "mensaje": "Cliente o libro no existe"}), 404
     if Prestamo.query.filter_by(cliente_id=cliente_id, estado="activo").first():
@@ -386,12 +386,12 @@ def devolver_prestamo(prestamo_id):
     err = requiere_gestor_o_admin()
     if err:
         return err
-    p = Prestamo.query.get(prestamo_id)
+    p = db.session.get(Prestamo, prestamo_id)
     if not p:
         return jsonify({"ok": False, "mensaje": "Préstamo no encontrado"}), 404
     if p.estado != "activo":
         return jsonify({"ok": False, "mensaje": "Este préstamo ya estaba devuelto"}), 400
-    libro = Libro.query.get(p.libro_id)
+    libro = db.session.get(Libro, p.libro_id)
     if libro:
         libro.cantidad_disponible += 1
     p.estado = "devuelto"

@@ -8,7 +8,7 @@ class UsuarioSistema(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario = db.Column(db.String(80), unique=True, nullable=False)
     clave_hash = db.Column(db.String(255), nullable=False)
-    rol = db.Column(db.String(20), nullable=False)  # gestor | administrador
+    rol = db.Column(db.String(20), nullable=False) 
 
     def to_dict(self):
         return {"id": self.id, "usuario": self.usuario, "rol": self.rol}
@@ -70,7 +70,7 @@ class Prestamo(db.Model):
     fecha_prestamo = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     fecha_devolucion_esperada = db.Column(db.Date, nullable=False)
     fecha_devolucion_real = db.Column(db.Date, nullable=True)
-    estado = db.Column(db.String(20), nullable=False, default="activo")  # activo | devuelto
+    estado = db.Column(db.String(20), nullable=False, default="activo") 
 
     cliente = db.relationship("Cliente", backref=db.backref("prestamos", lazy=True))
     libro = db.relationship("Libro", backref=db.backref("prestamos", lazy=True))
