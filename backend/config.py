@@ -5,7 +5,7 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 _backend_dir = Path(__file__).resolve().parent
-# override=True: lo que pongas en .env gana sobre variables viejas del sistema
+
 load_dotenv(_backend_dir / ".env", override=True)
 
 

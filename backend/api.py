@@ -54,6 +54,88 @@ def correo_valido(valor):
         return False
 
 
+def validar_libro(data, libro_id=None):
+    titulo = (data.get("titulo") or "").strip()
+    autor = (data.get("autor") or "").strip()
+    editorial = (data.get("editorial") or "").strip()
+    isbn = (data.get("isbn") or "").strip()
+    anio = data.get("anio_publicacion")
+    cantidad = data.get("cantidad_disponible")
+
+    if not titulo or not autor or not isbn:
+        return None, (jsonify({"ok": False, "mensaje": "Título, autor e ISBN son obligatorios"}), 400)
+    if not editorial:
+        return None, (jsonify({"ok": False, "mensaje": "La editorial es obligatoria"}), 400)
+    try:
+        anio = int(anio)
+    except (TypeError, ValueError):
+        return None, (jsonify({"ok": False, "mensaje": "Año de publicación inválido"}), 400)
+    try:
+        cantidad = int(cantidad)
+    except (TypeError, ValueError):
+        return None, (jsonify({"ok": False, "mensaje": "Cantidad inválida"}), 400)
+    if cantidad < 0:
+        return None, (jsonify({"ok": False, "mensaje": "La cantidad no puede ser negativa"}), 400)
+
+    if libro_id is None:
+        if Libro.query.filter_by(isbn=isbn).first():
+            return None, (jsonify({"ok": False, "mensaje": "Ya existe un libro con ese ISBN"}), 400)
+    else:
+        otro = Libro.query.filter(Libro.isbn == isbn, Libro.id != libro_id).first()
+        if otro:
+            return None, (jsonify({"ok": False, "mensaje": "Ya existe otro libro con ese ISBN"}), 400)
+
+    return (
+        {
+            "titulo": titulo,
+            "autor": autor,
+            "editorial": editorial,
+            "isbn": isbn,
+            "anio_publicacion": anio,
+            "cantidad_disponible": cantidad,
+        },
+        None,
+    )
+
+
+def validar_cliente(data, cliente_id=None):
+    nombre = (data.get("nombre") or "").strip()
+    apellido = (data.get("apellido") or "").strip()
+    correo = (data.get("correo") or "").strip()
+    telefono = (data.get("telefono") or "").strip()
+    nid = (data.get("numero_identificacion") or "").strip()
+
+    if not nombre or not nid:
+        return None, (jsonify({"ok": False, "mensaje": "Nombre e identificación son obligatorios"}), 400)
+    if not apellido:
+        return None, (jsonify({"ok": False, "mensaje": "El apellido es obligatorio"}), 400)
+    if not correo_valido(correo):
+        return None, (jsonify({"ok": False, "mensaje": "Correo con formato inválido"}), 400)
+    if not telefono:
+        return None, (jsonify({"ok": False, "mensaje": "El teléfono es obligatorio"}), 400)
+
+    if cliente_id is None:
+        if Cliente.query.filter_by(numero_identificacion=nid).first():
+            return None, (jsonify({"ok": False, "mensaje": "Esa identificación ya está registrada"}), 400)
+    else:
+        otro = Cliente.query.filter(
+            Cliente.numero_identificacion == nid, Cliente.id != cliente_id
+        ).first()
+        if otro:
+            return None, (jsonify({"ok": False, "mensaje": "Esa identificación ya está en uso"}), 400)
+
+    return (
+        {
+            "nombre": nombre,
+            "apellido": apellido,
+            "correo": correo,
+            "telefono": telefono,
+            "numero_identificacion": nid,
+        },
+        None,
+    )
+
+
 @bp.route("/auth/login", methods=["POST"])
 def login():
     datos = request.get_json(silent=True) or {}
@@ -85,8 +167,6 @@ def me():
     return jsonify({"ok": True, "usuario": u.usuario, "rol": u.rol})
 
 
-# --- Libros ---
-
 
 @bp.route("/libros", methods=["GET"])
 @jwt_required()
@@ -105,36 +185,10 @@ def crear_libro():
     if err:
         return err
     d = request.get_json(silent=True) or {}
-    titulo = (d.get("titulo") or "").strip()
-    autor = (d.get("autor") or "").strip()
-    editorial = (d.get("editorial") or "").strip()
-    isbn = (d.get("isbn") or "").strip()
-    anio = d.get("anio_publicacion")
-    cantidad = d.get("cantidad_disponible")
-    if not titulo or not autor or not isbn:
-        return jsonify({"ok": False, "mensaje": "Título, autor e ISBN son obligatorios"}), 400
-    if not editorial:
-        return jsonify({"ok": False, "mensaje": "La editorial es obligatoria"}), 400
-    try:
-        anio = int(anio)
-    except (TypeError, ValueError):
-        return jsonify({"ok": False, "mensaje": "Año de publicación inválido"}), 400
-    try:
-        cantidad = int(cantidad)
-    except (TypeError, ValueError):
-        return jsonify({"ok": False, "mensaje": "Cantidad inválida"}), 400
-    if cantidad < 0:
-        return jsonify({"ok": False, "mensaje": "La cantidad no puede ser negativa"}), 400
-    if Libro.query.filter_by(isbn=isbn).first():
-        return jsonify({"ok": False, "mensaje": "Ya existe un libro con ese ISBN"}), 400
-    libro = Libro(
-        titulo=titulo,
-        autor=autor,
-        editorial=editorial,
-        anio_publicacion=anio,
-        isbn=isbn,
-        cantidad_disponible=cantidad,
-    )
+    payload, val_err = validar_libro(d)
+    if val_err:
+        return val_err
+    libro = Libro(**payload)
     db.session.add(libro)
     db.session.commit()
     return jsonify({"ok": True, "datos": libro.to_dict()}), 201
@@ -150,35 +204,15 @@ def actualizar_libro(libro_id):
     if not libro:
         return jsonify({"ok": False, "mensaje": "Libro no encontrado"}), 404
     d = request.get_json(silent=True) or {}
-    titulo = (d.get("titulo") or "").strip()
-    autor = (d.get("autor") or "").strip()
-    editorial = (d.get("editorial") or "").strip()
-    isbn = (d.get("isbn") or "").strip()
-    anio = d.get("anio_publicacion")
-    cantidad = d.get("cantidad_disponible")
-    if not titulo or not autor or not isbn:
-        return jsonify({"ok": False, "mensaje": "Título, autor e ISBN son obligatorios"}), 400
-    if not editorial:
-        return jsonify({"ok": False, "mensaje": "La editorial es obligatoria"}), 400
-    try:
-        anio = int(anio)
-    except (TypeError, ValueError):
-        return jsonify({"ok": False, "mensaje": "Año de publicación inválido"}), 400
-    try:
-        cantidad = int(cantidad)
-    except (TypeError, ValueError):
-        return jsonify({"ok": False, "mensaje": "Cantidad inválida"}), 400
-    if cantidad < 0:
-        return jsonify({"ok": False, "mensaje": "La cantidad no puede ser negativa"}), 400
-    otro = Libro.query.filter(Libro.isbn == isbn, Libro.id != libro_id).first()
-    if otro:
-        return jsonify({"ok": False, "mensaje": "Ya existe otro libro con ese ISBN"}), 400
-    libro.titulo = titulo
-    libro.autor = autor
-    libro.editorial = editorial
-    libro.anio_publicacion = anio
-    libro.isbn = isbn
-    libro.cantidad_disponible = cantidad
+    payload, val_err = validar_libro(d, libro_id=libro_id)
+    if val_err:
+        return val_err
+    libro.titulo = payload["titulo"]
+    libro.autor = payload["autor"]
+    libro.editorial = payload["editorial"]
+    libro.anio_publicacion = payload["anio_publicacion"]
+    libro.isbn = payload["isbn"]
+    libro.cantidad_disponible = payload["cantidad_disponible"]
     db.session.commit()
     return jsonify({"ok": True, "datos": libro.to_dict()})
 
@@ -200,9 +234,6 @@ def borrar_libro(libro_id):
     return jsonify({"ok": True})
 
 
-# --- Clientes ---
-
-
 @bp.route("/clientes", methods=["GET"])
 @jwt_required()
 def listar_clientes():
@@ -220,28 +251,10 @@ def crear_cliente():
     if err:
         return err
     d = request.get_json(silent=True) or {}
-    nombre = (d.get("nombre") or "").strip()
-    apellido = (d.get("apellido") or "").strip()
-    correo = (d.get("correo") or "").strip()
-    telefono = (d.get("telefono") or "").strip()
-    nid = (d.get("numero_identificacion") or "").strip()
-    if not nombre or not nid:
-        return jsonify({"ok": False, "mensaje": "Nombre e identificación son obligatorios"}), 400
-    if not apellido:
-        return jsonify({"ok": False, "mensaje": "El apellido es obligatorio"}), 400
-    if not correo_valido(correo):
-        return jsonify({"ok": False, "mensaje": "Correo con formato inválido"}), 400
-    if not telefono:
-        return jsonify({"ok": False, "mensaje": "El teléfono es obligatorio"}), 400
-    if Cliente.query.filter_by(numero_identificacion=nid).first():
-        return jsonify({"ok": False, "mensaje": "Esa identificación ya está registrada"}), 400
-    c = Cliente(
-        nombre=nombre,
-        apellido=apellido,
-        correo=correo,
-        telefono=telefono,
-        numero_identificacion=nid,
-    )
+    payload, val_err = validar_cliente(d)
+    if val_err:
+        return val_err
+    c = Cliente(**payload)
     db.session.add(c)
     db.session.commit()
     return jsonify({"ok": True, "datos": c.to_dict()}), 201
@@ -257,29 +270,14 @@ def actualizar_cliente(cliente_id):
     if not c:
         return jsonify({"ok": False, "mensaje": "Cliente no encontrado"}), 404
     d = request.get_json(silent=True) or {}
-    nombre = (d.get("nombre") or "").strip()
-    apellido = (d.get("apellido") or "").strip()
-    correo = (d.get("correo") or "").strip()
-    telefono = (d.get("telefono") or "").strip()
-    nid = (d.get("numero_identificacion") or "").strip()
-    if not nombre or not nid:
-        return jsonify({"ok": False, "mensaje": "Nombre e identificación son obligatorios"}), 400
-    if not apellido:
-        return jsonify({"ok": False, "mensaje": "El apellido es obligatorio"}), 400
-    if not correo_valido(correo):
-        return jsonify({"ok": False, "mensaje": "Correo con formato inválido"}), 400
-    if not telefono:
-        return jsonify({"ok": False, "mensaje": "El teléfono es obligatorio"}), 400
-    otro = Cliente.query.filter(
-        Cliente.numero_identificacion == nid, Cliente.id != cliente_id
-    ).first()
-    if otro:
-        return jsonify({"ok": False, "mensaje": "Esa identificación ya está en uso"}), 400
-    c.nombre = nombre
-    c.apellido = apellido
-    c.correo = correo
-    c.telefono = telefono
-    c.numero_identificacion = nid
+    payload, val_err = validar_cliente(d, cliente_id=cliente_id)
+    if val_err:
+        return val_err
+    c.nombre = payload["nombre"]
+    c.apellido = payload["apellido"]
+    c.correo = payload["correo"]
+    c.telefono = payload["telefono"]
+    c.numero_identificacion = payload["numero_identificacion"]
     db.session.commit()
     return jsonify({"ok": True, "datos": c.to_dict()})
 
@@ -299,9 +297,6 @@ def borrar_cliente(cliente_id):
     db.session.delete(c)
     db.session.commit()
     return jsonify({"ok": True})
-
-
-# --- Préstamos ---
 
 
 def _parse_fecha(s):
@@ -407,8 +402,6 @@ def devolver_prestamo(prestamo_id):
     return jsonify({"ok": True, "datos": p.to_dict()})
 
 
-# --- Reportes (solo administrador) ---
-
 
 @bp.route("/reportes", methods=["GET"])
 @jwt_required()
@@ -493,9 +486,6 @@ def reportes_por_cliente(cliente_id):
         _ = p.cliente
         _ = p.libro
     return jsonify({"ok": True, "datos": [x.to_dict() for x in lista]})
-
-
-# --- Usuarios del sistema (solo admin) ---
 
 
 @bp.route("/usuarios-sistema", methods=["GET"])
