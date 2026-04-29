@@ -456,38 +456,6 @@ def reportes():
     return jsonify({"ok": True, "datos": salida})
 
 
-@bp.route("/reportes/por-libro/<int:libro_id>", methods=["GET"])
-@jwt_required()
-def reportes_por_libro(libro_id):
-    err = requiere_admin()
-    if err:
-        return err
-    lista = (
-        Prestamo.query.filter_by(libro_id=libro_id).order_by(Prestamo.fecha_prestamo.desc()).all()
-    )
-    for p in lista:
-        _ = p.cliente
-        _ = p.libro
-    return jsonify({"ok": True, "datos": [x.to_dict() for x in lista]})
-
-
-@bp.route("/reportes/por-cliente/<int:cliente_id>", methods=["GET"])
-@jwt_required()
-def reportes_por_cliente(cliente_id):
-    err = requiere_admin()
-    if err:
-        return err
-    lista = (
-        Prestamo.query.filter_by(cliente_id=cliente_id)
-        .order_by(Prestamo.fecha_prestamo.desc())
-        .all()
-    )
-    for p in lista:
-        _ = p.cliente
-        _ = p.libro
-    return jsonify({"ok": True, "datos": [x.to_dict() for x in lista]})
-
-
 @bp.route("/usuarios-sistema", methods=["GET"])
 @jwt_required()
 def listar_usuarios_sistema():
