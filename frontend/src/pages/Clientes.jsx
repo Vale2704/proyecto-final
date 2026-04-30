@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
-import { textoErrorApi } from "../api/error.js";
+import { cargarLista, ejecutarAccion } from "../api/request.js";
 
 const vacio = {
   nombre: "",
@@ -17,15 +17,12 @@ export default function Clientes() {
   const [msg, setMsg] = useState("");
 
   async function cargar() {
-    setMsg("");
-    try {
-      const { data } = await api.get("/api/clientes");
-      if (data.ok) setLista(data.datos || []);
-      else setMsg(data.mensaje || "Respuesta sin datos.");
-    } catch (e) {
-      setLista([]);
-      setMsg(textoErrorApi(e));
-    }
+    await cargarLista({
+      setMsg,
+      setLista,
+      url: "/api/clientes",
+      mensajeSinDatos: "Respuesta sin datos.",
+    });
   }
 
   useEffect(() => {
@@ -38,19 +35,17 @@ export default function Clientes() {
 
   async function guardar(e) {
     e.preventDefault();
-    setMsg("");
-    try {
-      if (editando) {
-        await api.put(`/api/clientes/${editando}`, form);
-      } else {
-        await api.post("/api/clientes", form);
-      }
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () =>
+        editando ? api.put(`/api/clientes/${editando}`, form) : api.post("/api/clientes", form),
+      mensajeError: "Error al guardar",
+    });
+    if (ok) {
       setForm(vacio);
       setEditando(null);
       await cargar();
       setMsg("Guardado bien.");
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "Error al guardar");
     }
   }
 
@@ -61,13 +56,14 @@ export default function Clientes() {
 
   async function borrar(id) {
     if (!window.confirm("¿Borrar este cliente?")) return;
-    setMsg("");
-    try {
-      await api.delete(`/api/clientes/${id}`);
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () => api.delete(`/api/clientes/${id}`),
+      mensajeError: "No se pudo borrar",
+    });
+    if (ok) {
       await cargar();
       setMsg("Borrado.");
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "No se pudo borrar");
     }
   }
 
