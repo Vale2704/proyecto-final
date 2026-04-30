@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
-import { textoErrorApi } from "../api/error.js";
+import { cargarLista, ejecutarAccion } from "../api/request.js";
 
 export default function UsuariosSistema() {
   const [lista, setLista] = useState([]);
@@ -10,15 +10,12 @@ export default function UsuariosSistema() {
   const [msg, setMsg] = useState("");
 
   async function cargar() {
-    setMsg("");
-    try {
-      const { data } = await api.get("/api/usuarios-sistema");
-      if (data.ok) setLista(data.datos || []);
-      else setMsg(data.mensaje || "Sin datos.");
-    } catch (e) {
-      setLista([]);
-      setMsg(textoErrorApi(e));
-    }
+    await cargarLista({
+      setMsg,
+      setLista,
+      url: "/api/usuarios-sistema",
+      mensajeSinDatos: "Sin datos.",
+    });
   }
 
   useEffect(() => {
@@ -27,16 +24,17 @@ export default function UsuariosSistema() {
 
   async function crear(e) {
     e.preventDefault();
-    setMsg("");
-    try {
-      await api.post("/api/usuarios-sistema", { usuario: usuario.trim(), clave, rol });
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () => api.post("/api/usuarios-sistema", { usuario: usuario.trim(), clave, rol }),
+      mensajeError: "No se pudo crear",
+    });
+    if (ok) {
       setUsuario("");
       setClave("");
       setRol("gestor");
       await cargar();
       setMsg("Usuario creado.");
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "No se pudo crear");
     }
   }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
-import { textoErrorApi } from "../api/error.js";
+import { cargarLista, ejecutarAccion } from "../api/request.js";
 
 const vacio = {
   titulo: "",
@@ -18,15 +18,12 @@ export default function Libros() {
   const [msg, setMsg] = useState("");
 
   async function cargar() {
-    setMsg("");
-    try {
-      const { data } = await api.get("/api/libros");
-      if (data.ok) setLista(data.datos || []);
-      else setMsg(data.mensaje || "El servidor respondió sin datos.");
-    } catch (e) {
-      setLista([]);
-      setMsg(textoErrorApi(e));
-    }
+    await cargarLista({
+      setMsg,
+      setLista,
+      url: "/api/libros",
+      mensajeSinDatos: "El servidor respondió sin datos.",
+    });
   }
 
   useEffect(() => {
@@ -39,19 +36,17 @@ export default function Libros() {
 
   async function guardar(e) {
     e.preventDefault();
-    setMsg("");
-    try {
-      if (editando) {
-        await api.put(`/api/libros/${editando}`, form);
-      } else {
-        await api.post("/api/libros", form);
-      }
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () =>
+        editando ? api.put(`/api/libros/${editando}`, form) : api.post("/api/libros", form),
+      mensajeError: "Error al guardar",
+    });
+    if (ok) {
       setForm(vacio);
       setEditando(null);
       await cargar();
       setMsg("Guardado bien.");
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "Error al guardar");
     }
   }
 
@@ -69,13 +64,14 @@ export default function Libros() {
 
   async function borrar(id) {
     if (!window.confirm("¿Seguro que quieres borrar este libro?")) return;
-    setMsg("");
-    try {
-      await api.delete(`/api/libros/${id}`);
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () => api.delete(`/api/libros/${id}`),
+      mensajeError: "No se pudo borrar",
+    });
+    if (ok) {
       await cargar();
       setMsg("Listo, borrado.");
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "No se pudo borrar");
     }
   }
 

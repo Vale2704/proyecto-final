@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
 import { textoErrorApi } from "../api/error.js";
+import { ejecutarAccion } from "../api/request.js";
 
 export default function Reportes() {
   const [q, setQ] = useState("");
@@ -23,18 +24,20 @@ export default function Reportes() {
 
   async function buscar(e) {
     e.preventDefault();
-    setMsg("");
-    try {
-      const params = new URLSearchParams();
-      if (q.trim()) params.set("q", q.trim());
-      if (libroId) params.set("libro_id", libroId);
-      if (clienteId) params.set("cliente_id", clienteId);
-      const url = `/api/reportes${params.toString() ? `?${params.toString()}` : ""}`;
-      const { data } = await api.get(url);
-      if (data.ok) setFilas(data.datos);
-    } catch (err) {
-      setMsg(textoErrorApi(err));
-    }
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: async () => {
+        const params = new URLSearchParams();
+        if (q.trim()) params.set("q", q.trim());
+        if (libroId) params.set("libro_id", libroId);
+        if (clienteId) params.set("cliente_id", clienteId);
+        const url = `/api/reportes${params.toString() ? `?${params.toString()}` : ""}`;
+        const { data } = await api.get(url);
+        if (data.ok) setFilas(data.datos);
+      },
+      mensajeError: textoErrorApi,
+    });
+    if (!ok) setFilas([]);
   }
 
   useEffect(() => {

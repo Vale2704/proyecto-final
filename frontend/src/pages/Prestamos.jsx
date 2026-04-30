@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
 import { textoErrorApi } from "../api/error.js";
+import { ejecutarAccion } from "../api/request.js";
 
 function fechaLocalParaInput(d) {
   if (!d) return "";
@@ -46,28 +47,31 @@ export default function Prestamos() {
 
   async function crear(e) {
     e.preventDefault();
-    setMsg("");
-    try {
-      await api.post("/api/prestamos", {
-        cliente_id: Number(clienteId),
-        libro_id: Number(libroId),
-        fecha_devolucion_esperada: fechaDev,
-      });
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () =>
+        api.post("/api/prestamos", {
+          cliente_id: Number(clienteId),
+          libro_id: Number(libroId),
+          fecha_devolucion_esperada: fechaDev,
+        }),
+      mensajeError: "No se pudo crear el préstamo",
+    });
+    if (ok) {
       setMsg("Préstamo registrado.");
       await cargarTodo();
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "No se pudo crear el préstamo");
     }
   }
 
   async function devolver(id) {
-    setMsg("");
-    try {
-      await api.post(`/api/prestamos/${id}/devolver`);
+    const ok = await ejecutarAccion({
+      setMsg,
+      accion: () => api.post(`/api/prestamos/${id}/devolver`),
+      mensajeError: "Error al devolver",
+    });
+    if (ok) {
       setMsg("Devolución registrada.");
       await cargarTodo();
-    } catch (err) {
-      setMsg(err.response?.data?.mensaje || "Error al devolver");
     }
   }
 
