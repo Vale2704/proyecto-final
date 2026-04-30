@@ -1,7 +1,7 @@
 import os
 import time
 
-from flask import Flask, Response, request
+from flask import Flask, Response
 from flask_cors import CORS
 from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
@@ -58,28 +58,7 @@ def crear_app():
 
     @app.get("/")
     def raiz():
-        raw = request.host or "127.0.0.1:5000"
-        if raw.startswith("["):
-            host = raw[1 : raw.index("]")]
-        else:
-            host = raw.rsplit(":", 1)[0] if ":" in raw else raw
-        url_app = f"http://{host}:5173/"
-        html = f"""<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Biblioteca BuenaVentura</title>
-</head>
-<body style="font-family: system-ui, sans-serif; padding: 1.5rem; max-width: 36rem;">
-  <h1 style="font-weight:600;">Estás en la API (puerto 5000)</h1>
-  <p>La interfaz con React está en el <strong>puerto 5173</strong>. Redirigiendo…</p>
-  <p>Si no te lleva solo, abre: <a href="{url_app}">{url_app}</a></p>
-  <p style="color:#555;font-size:0.95rem;">En otra terminal: <code>cd frontend</code> y <code>npm run dev</code></p>
-  <script>location.replace("{url_app}");</script>
-</body>
-</html>"""
-        return Response(html, mimetype="text/html; charset=utf-8")
+        return {"ok": True, "mensaje": "API activa"}
 
     @app.get("/favicon.ico")
     def favicon():
