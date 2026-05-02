@@ -40,7 +40,6 @@ export default function Libros() {
       setMsg,
       accion: () =>
         editando ? api.put(`/api/libros/${editando}`, form) : api.post("/api/libros", form),
-      mensajeError: "Error al guardar",
     });
     if (ok) {
       setForm(vacio);
@@ -67,7 +66,6 @@ export default function Libros() {
     const ok = await ejecutarAccion({
       setMsg,
       accion: () => api.delete(`/api/libros/${id}`),
-      mensajeError: "No se pudo borrar",
     });
     if (ok) {
       await cargar();

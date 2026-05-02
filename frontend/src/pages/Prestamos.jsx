@@ -33,8 +33,8 @@ export default function Prestamos() {
       if (r1.data.ok) setLista(r1.data.datos || []);
       if (r2.data.ok) setClientes(r2.data.datos || []);
       if (r3.data.ok) setLibros(r3.data.datos || []);
-    } catch (e) {
-      setMsg(textoErrorApi(e));
+    } catch (error) {
+      setMsg(textoErrorApi(error));
     }
   }
 
@@ -55,7 +55,6 @@ export default function Prestamos() {
           libro_id: Number(libroId),
           fecha_devolucion_esperada: fechaDev,
         }),
-      mensajeError: "No se pudo crear el préstamo",
     });
     if (ok) {
       setMsg("Préstamo registrado.");
@@ -67,7 +66,6 @@ export default function Prestamos() {
     const ok = await ejecutarAccion({
       setMsg,
       accion: () => api.post(`/api/prestamos/${id}/devolver`),
-      mensajeError: "Error al devolver",
     });
     if (ok) {
       setMsg("Devolución registrada.");

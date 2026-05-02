@@ -17,8 +17,8 @@ export default function Reportes() {
       const [r1, r2] = await Promise.all([api.get("/api/libros"), api.get("/api/clientes")]);
       if (r1.data.ok) setLibros(r1.data.datos || []);
       if (r2.data.ok) setClientes(r2.data.datos || []);
-    } catch (e) {
-      setMsg(textoErrorApi(e));
+    } catch (error) {
+      setMsg(textoErrorApi(error));
     }
   }
 
@@ -35,7 +35,6 @@ export default function Reportes() {
         const { data } = await api.get(url);
         if (data.ok) setFilas(data.datos);
       },
-      mensajeError: textoErrorApi,
     });
     if (!ok) setFilas([]);
   }
@@ -47,8 +46,8 @@ export default function Reportes() {
       try {
         const r = await api.get("/api/reportes");
         if (!cancel && r.data.ok) setFilas(r.data.datos || []);
-      } catch (e) {
-        if (!cancel) setMsg(textoErrorApi(e));
+      } catch (error) {
+        if (!cancel) setMsg(textoErrorApi(error));
       }
     }
     ini();

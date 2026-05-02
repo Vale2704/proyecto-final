@@ -27,7 +27,6 @@ export default function UsuariosSistema() {
     const ok = await ejecutarAccion({
       setMsg,
       accion: () => api.post("/api/usuarios-sistema", { usuario: usuario.trim(), clave, rol }),
-      mensajeError: "No se pudo crear",
     });
     if (ok) {
       setUsuario("");
