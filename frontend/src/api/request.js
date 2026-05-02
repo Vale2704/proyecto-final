@@ -24,17 +24,13 @@ export async function cargarLista({
   }
 }
 
-export async function ejecutarAccion({
-  setMsg,
-  accion,
-  mensajeError = "Ocurrió un error.",
-}) {
+export async function ejecutarAccion({ setMsg, accion }) {
   setMsg("");
   try {
     await accion();
     return true;
   } catch (error) {
-    setMsg(error.response?.data?.mensaje || mensajeError || textoErrorApi(error));
+    setMsg(textoErrorApi(error));
     return false;
   }
 }

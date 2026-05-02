@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { textoErrorApi } from "../api/error.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Login() {
@@ -16,9 +17,8 @@ export default function Login() {
       const data = await login(usuario.trim(), clave);
       if (data.ok) nav("/panel");
       else setError(data.mensaje || "No se pudo entrar");
-    } catch (err) {
-      const msg = err.response?.data?.mensaje || "Error de conexión con el servidor";
-      setError(msg);
+    } catch (error) {
+      setError(textoErrorApi(error));
     }
   }
 

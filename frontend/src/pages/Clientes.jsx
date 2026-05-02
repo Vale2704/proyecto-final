@@ -39,7 +39,6 @@ export default function Clientes() {
       setMsg,
       accion: () =>
         editando ? api.put(`/api/clientes/${editando}`, form) : api.post("/api/clientes", form),
-      mensajeError: "Error al guardar",
     });
     if (ok) {
       setForm(vacio);
@@ -59,7 +58,6 @@ export default function Clientes() {
     const ok = await ejecutarAccion({
       setMsg,
       accion: () => api.delete(`/api/clientes/${id}`),
-      mensajeError: "No se pudo borrar",
     });
     if (ok) {
       await cargar();
