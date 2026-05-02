@@ -213,3 +213,49 @@ tr:nth-child(even) {
 .login-caja h2 {
   text-align: center;
 }
+
+.estado-carga {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #5a6570;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.estado-carga-centro {
+  justify-content: center;
+  width: 100%;
+  padding: 1rem 0.5rem;
+}
+
+.estado-carga-spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--borde);
+  border-top-color: var(--acento);
+  border-radius: 50%;
+  animation: estado-carga-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes estado-carga-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.login-caja input:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}
+
+.grid-form select:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}

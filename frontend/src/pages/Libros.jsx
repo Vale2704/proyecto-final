@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
 import { cargarLista, ejecutarAccion } from "../api/request.js";
+import EstadoCarga from "../components/EstadoCarga.jsx";
 
 const vacio = {
   titulo: "",
@@ -16,6 +17,7 @@ export default function Libros() {
   const [form, setForm] = useState(vacio);
   const [editando, setEditando] = useState(null);
   const [msg, setMsg] = useState("");
+  const [cargando, setCargando] = useState(true);
 
   async function cargar() {
     await cargarLista({
@@ -23,6 +25,7 @@ export default function Libros() {
       setLista,
       url: "/api/libros",
       mensajeSinDatos: "El servidor respondió sin datos.",
+      setCargando,
     });
   }
 
@@ -146,24 +149,32 @@ export default function Libros() {
               </tr>
             </thead>
             <tbody>
-              {lista.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.titulo}</td>
-                  <td>{row.autor}</td>
-                  <td>{row.isbn}</td>
-                  <td>{row.cantidad_disponible}</td>
-                  <td>
-                    <div className="fila-acciones">
-                      <button type="button" className="btn btn-sec" onClick={() => editar(row)}>
-                        Editar
-                      </button>
-                      <button type="button" className="btn btn-peligro" onClick={() => borrar(row.id)}>
-                        Borrar
-                      </button>
-                    </div>
+              {cargando ? (
+                <tr>
+                  <td colSpan={5}>
+                    <EstadoCarga etiqueta="Cargando libros…" centrado />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                lista.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.titulo}</td>
+                    <td>{row.autor}</td>
+                    <td>{row.isbn}</td>
+                    <td>{row.cantidad_disponible}</td>
+                    <td>
+                      <div className="fila-acciones">
+                        <button type="button" className="btn btn-sec" onClick={() => editar(row)}>
+                          Editar
+                        </button>
+                        <button type="button" className="btn btn-peligro" onClick={() => borrar(row.id)}>
+                          Borrar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
