@@ -6,8 +6,10 @@ export async function cargarLista({
   setLista,
   url,
   mensajeSinDatos = "Respuesta sin datos.",
+  setCargando,
 }) {
   setMsg("");
+  setCargando?.(true);
   try {
     const { data } = await api.get(url);
     if (data.ok) {
@@ -21,6 +23,8 @@ export async function cargarLista({
     setLista([]);
     setMsg(textoErrorApi(error));
     return false;
+  } finally {
+    setCargando?.(false);
   }
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/client.js";
 import { textoErrorApi } from "../api/error.js";
 import { ejecutarAccion } from "../api/request.js";
+import EstadoCarga from "../components/EstadoCarga.jsx";
 
 export default function Reportes() {
   const [q, setQ] = useState("");
@@ -11,6 +12,8 @@ export default function Reportes() {
   const [clientes, setClientes] = useState([]);
   const [filas, setFilas] = useState([]);
   const [msg, setMsg] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [cargandoBusqueda, setCargandoBusqueda] = useState(false);
 
   async function cargarListas() {
     try {
@@ -24,30 +27,38 @@ export default function Reportes() {
 
   async function buscar(e) {
     e.preventDefault();
-    const ok = await ejecutarAccion({
-      setMsg,
-      accion: async () => {
-        const params = new URLSearchParams();
-        if (q.trim()) params.set("q", q.trim());
-        if (libroId) params.set("libro_id", libroId);
-        if (clienteId) params.set("cliente_id", clienteId);
-        const url = `/api/reportes${params.toString() ? `?${params.toString()}` : ""}`;
-        const { data } = await api.get(url);
-        if (data.ok) setFilas(data.datos);
-      },
-    });
-    if (!ok) setFilas([]);
+    setCargandoBusqueda(true);
+    try {
+      const ok = await ejecutarAccion({
+        setMsg,
+        accion: async () => {
+          const params = new URLSearchParams();
+          if (q.trim()) params.set("q", q.trim());
+          if (libroId) params.set("libro_id", libroId);
+          if (clienteId) params.set("cliente_id", clienteId);
+          const url = `/api/reportes${params.toString() ? `?${params.toString()}` : ""}`;
+          const { data } = await api.get(url);
+          if (data.ok) setFilas(data.datos);
+        },
+      });
+      if (!ok) setFilas([]);
+    } finally {
+      setCargandoBusqueda(false);
+    }
   }
 
   useEffect(() => {
     let cancel = false;
     async function ini() {
-      await cargarListas();
+      setCargando(true);
       try {
+        await cargarListas();
         const r = await api.get("/api/reportes");
         if (!cancel && r.data.ok) setFilas(r.data.datos || []);
       } catch (error) {
         if (!cancel) setMsg(textoErrorApi(error));
+      } finally {
+        if (!cancel) setCargando(false);
       }
     }
     ini();
@@ -64,11 +75,21 @@ export default function Reportes() {
         <form onSubmit={buscar} style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}>
           <label>
             Buscar (ISBN, título, nombre)
-            <input value={q} onChange={(e) => setQ(e.target.value)} style={{ minWidth: "200px" }} />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              style={{ minWidth: "200px" }}
+              disabled={cargando}
+            />
           </label>
           <label>
             Libro
-            <select value={libroId} onChange={(e) => setLibroId(e.target.value)} style={{ minWidth: "180px" }}>
+            <select
+              value={libroId}
+              onChange={(e) => setLibroId(e.target.value)}
+              style={{ minWidth: "180px" }}
+              disabled={cargando}
+            >
               <option value="">Todos</option>
               {libros.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -79,7 +100,12 @@ export default function Reportes() {
           </label>
           <label>
             Cliente
-            <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} style={{ minWidth: "200px" }}>
+            <select
+              value={clienteId}
+              onChange={(e) => setClienteId(e.target.value)}
+              style={{ minWidth: "200px" }}
+              disabled={cargando}
+            >
               <option value="">Todos</option>
               {clientes.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -88,8 +114,8 @@ export default function Reportes() {
               ))}
             </select>
           </label>
-          <button type="submit" className="btn">
-            Ver
+          <button type="submit" className="btn" disabled={cargando || cargandoBusqueda}>
+            {cargandoBusqueda ? "Buscando…" : cargando ? "Cargando…" : "Ver"}
           </button>
         </form>
         {msg ? <p className="msg-error">{msg}</p> : null}
@@ -109,19 +135,32 @@ export default function Reportes() {
               </tr>
             </thead>
             <tbody>
-              {filas.map((row) => (
-                <tr key={row.id}>
-                  <td>{row.fecha_prestamo ? row.fecha_prestamo.slice(0, 10) : ""}</td>
-                  <td>{row.usuario_nombre}</td>
-                  <td>{row.libro_titulo}</td>
-                  <td>{row.libro_isbn}</td>
-                  <td>{row.estado}</td>
+              {cargando || cargandoBusqueda ? (
+                <tr>
+                  <td colSpan={5}>
+                    <EstadoCarga
+                      etiqueta={cargando ? "Cargando reportes…" : "Aplicando filtros…"}
+                      centrado
+                    />
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                filas.map((row) => (
+                  <tr key={row.id}>
+                    <td>{row.fecha_prestamo ? row.fecha_prestamo.slice(0, 10) : ""}</td>
+                    <td>{row.usuario_nombre}</td>
+                    <td>{row.libro_titulo}</td>
+                    <td>{row.libro_isbn}</td>
+                    <td>{row.estado}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-        {filas.length === 0 ? <p style={{ color: "#666" }}>No hay préstamos registrados todavía.</p> : null}
+        {!cargando && !cargandoBusqueda && filas.length === 0 ? (
+          <p style={{ color: "#666" }}>No hay préstamos registrados todavía.</p>
+        ) : null}
       </div>
     </div>
   );

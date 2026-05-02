@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/client.js";
 import { cargarLista, ejecutarAccion } from "../api/request.js";
+import EstadoCarga from "../components/EstadoCarga.jsx";
 
 export default function UsuariosSistema() {
   const [lista, setLista] = useState([]);
@@ -8,6 +9,7 @@ export default function UsuariosSistema() {
   const [clave, setClave] = useState("");
   const [rol, setRol] = useState("gestor");
   const [msg, setMsg] = useState("");
+  const [cargando, setCargando] = useState(true);
 
   async function cargar() {
     await cargarLista({
@@ -15,6 +17,7 @@ export default function UsuariosSistema() {
       setLista,
       url: "/api/usuarios-sistema",
       mensajeSinDatos: "Sin datos.",
+      setCargando,
     });
   }
 
@@ -76,12 +79,20 @@ export default function UsuariosSistema() {
               </tr>
             </thead>
             <tbody>
-              {lista.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.usuario}</td>
-                  <td>{u.rol}</td>
+              {cargando ? (
+                <tr>
+                  <td colSpan={2}>
+                    <EstadoCarga etiqueta="Cargando usuarios…" centrado />
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                lista.map((u) => (
+                  <tr key={u.id}>
+                    <td>{u.usuario}</td>
+                    <td>{u.rol}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
